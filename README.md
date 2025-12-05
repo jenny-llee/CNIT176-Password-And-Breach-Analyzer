@@ -1,19 +1,22 @@
-# CNIT176-Password-And-Breach-Analyzer
-# LastScroll
-<h1>TECH120 Final Project</h1>
+# CNIT176-Password-Strength-Analyzer-And-Breach-Checker-
 
-<h2>Group 3's Final Project for TECH120 at Purdue University</h2>
+My objective was to create a C++ command-line tool that analyzes the strength of **test passwords** and checks whether they appear in public data breaches. The program runs on a Raspberry Pi (or any Linux system with C++17, OpenSSL, and libcurl), scores each password based on length and character variety, looks for weak patterns (like password, 1234, keyboard walks, and years), and then uses a privacy-preserving SHA-1 prefix query to the Pwned Passwords API. It prints a clear report with a rating, numeric score, reasons, and suggestions so I can see how different test passwords behave. This tool is for testing and learning only — never for real passwords.
 
-<h3>Members: Jenny Lee, Arrow Patel, Luke Latino, and Harjot Singh</h3>
+When I run, for example:
 
-<p>
-Our objective is to create a Chrome extension that helps students balance their use of short-form content with studying. Instead of blocking apps completely, our tool tracks time spent on YouTube Shorts, Instagram Reels, and TikTok on desktop, shows a daily “short-form time” meter, and uses gentle pop-up reminders and fun facts to nudge users to take breaks and return to their work. This project is specifically for web applications, not mobile devices. </b>
-</p>
+./pw_checker "Password123"
 
-An example may be as follows:
-<ul>
-    <li> When a user opens YouTube Shorts, Instagram Reels, or TikTok on their computer, the extension starts tracking how long they spend on those short-form feeds. </li> 
-    <li> As the user scrolls through YouTube Shorts and Instagram Reels, the extension counts their scrolls. After a set number of scrolls, a pop-up appears with a fun fact and shows their total short-form time for the day.</li>
-    <li> On TikTok, because the feed is continuous, a pop-up appears every 2 minutes instead of after a specific number of scrolls. </li>
-    <li> The extension keeps a running daily total across all three platforms so users can quickly see how much time they’ve spent scrolling short-form content. </li>
-</ul>
+the tool calls analyze_password to measure the password’s length, count how many character types it uses (lowercase, uppercase, digits, symbols), and compute a numeric score. It then assigns a rating from Weak, Fair, Good, to Strong and prints the rating, score, length, and character variety, along with breach information.
+
+During the same run, the analyzer checks for common weak patterns inside the password. It flags:
+- common words like password, letmein, qwerty, or iloveyou
+- repeated characters such as aaa
+- digit sequences like 1234 or 4321
+- keyboard walks along QWERTY rows
+- years between 1990 and 2030
+
+Each issue becomes a human-readable entry under the reasons, and matching tips (like “Use 14+ characters” or “Avoid years or dates”) are added under the suggestions so users know exactly how to improve the test password.
+
+At the same time, the breach module (pwned_count) hashes the test password locally in C++ using OpenSSL’s SHA-1 implementation. It converts the digest to a 40-character uppercase hex string, splits it into a 5-character prefix and a 35-character suffix, and sends only the prefix to https://api.pwnedpasswords.com/range/<prefix> using libcurl. It then searches the returned suffix list on my machine. If it finds a match, it reports that the password was found in breaches and shows the number of times that hash has appeared; if the network request fails, the program catches the exception and still shows the local strength analysis.
+
+To make the tool easier to use, I added a shell alias called pwcheck in my .bashrc that points to the compiled binary. After reloading the shell configuration, I can type commands like: (pwcheck "Password123") from any directory instead of having to type the full path to pw_checker.
